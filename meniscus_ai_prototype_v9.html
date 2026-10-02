@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeniscusAI — Clinical Research & Implant Planning Workstation</title>
+<style>
+:root{
+  --bg:#071018; --bg2:#050a0f; --panel:#0d1720; --panel2:#0b151e;
+  --card:#111e27; --card2:#131e27; --border:#273640; --border2:#293943;
+  --text:#dce7ed; --muted:#71838f; --muted2:#82939e; --accent:#0f766e;
+  --accent-br:#14b8a6; --accent-light:#6ee7b7; --teal:#78ded0;
+  --warn-bg:#191a18; --warn-bd:#3e403a; --warn-tx:#aaa596;
+  --blue:#3b82f6; --orange:#f59e0b;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--text);
+  font-family:"Segoe UI",Inter,Arial,sans-serif;overflow:hidden;}
+button,input,select{font-family:inherit;}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:#22323c;border-radius:4px;}
+
+.topbar{height:64px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;background:#0d1720;border-bottom:1px solid var(--border);}
+.brand{display:flex;align-items:center;gap:12px;}
+.logo{width:37px;height:37px;display:flex;align-items:center;justify-content:center;
+  border-radius:9px;background:var(--accent);color:#fff;font-weight:800;font-size:17px;}
+.brand-title{color:#fff;font-size:17px;font-weight:800;}
+.brand-sub{color:var(--muted);font-size:8px;letter-spacing:1.2px;margin-top:2px;}
+.top-right{display:flex;align-items:center;gap:7px;}
+.chip{padding:7px 10px;border:1px solid #30404c;background:#14212a;border-radius:6px;
+  color:#9eb0bc;font-size:9px;}
+.ready{color:var(--accent-light);}
+
+.app{height:calc(100vh - 64px);display:grid;grid-template-columns:250px minmax(520px,1fr) 350px;}
+
+.sidebar{background:var(--panel2);border-right:1px solid var(--border);padding:17px;overflow-y:auto;}
+.label{color:var(--muted);font-size:8px;font-weight:800;letter-spacing:1.1px;
+  text-transform:uppercase;margin-bottom:8px;}
+.case-card{padding:11px;border:1px solid var(--border2);background:var(--card);
+  border-radius:7px;margin-bottom:10px;}
+.case-id{color:#fff;font-size:14px;font-weight:800;}
+.case-sub{color:#728490;font-size:9px;margin-top:3px;}
+
+.field{margin-bottom:9px;}
+.field label{display:block;color:#8a9aa5;font-size:8px;font-weight:700;
+  letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;}
+.field input, .field select{width:100%;padding:7px 8px;background:#0f1c25;
+  border:1px solid #2b3c47;border-radius:5px;color:#fff;font-size:11px;}
+.field select{cursor:pointer;}
+
+.analyze{width:100%;padding:11px;border:0;border-radius:6px;background:var(--accent);
+  color:#fff;font-size:9px;font-weight:800;cursor:pointer;letter-spacing:.5px;}
+.analyze:hover{background:#0d665f;}
+.analyze:active{transform:translateY(1px);}
+
+.divider{height:1px;background:#263640;margin:14px 0;}
+
+.nav{width:100%;padding:9px 11px;margin:2px 0;border:1px solid transparent;
+  border-radius:6px;background:transparent;color:#91a2ad;text-align:left;
+  cursor:pointer;font-size:10px;display:block;}
+.nav:hover{background:#15232d;color:#fff;}
+.nav.active{background:#103b39;border-color:#1a625c;color:#70e2d4;}
+
+.notice{margin-top:12px;padding:9px;border:1px solid #394048;background:#191e23;
+  border-radius:6px;color:#9aa5ad;font-size:8px;line-height:1.5;}
+
+.center{background:var(--bg2);padding:15px;overflow-y:auto;}
+.workspace{border:1px solid #283842;border-radius:8px;overflow:hidden;background:#081118;}
+.workspace-header{min-height:54px;display:flex;align-items:center;justify-content:space-between;
+  padding:9px 13px;background:#101b24;border-bottom:1px solid var(--border);}
+.workspace-title{color:#fff;font-size:12px;font-weight:800;}
+.workspace-subtitle{color:var(--muted);font-size:8px;margin-top:2px;}
+.header-tools{display:flex;gap:5px;}
+.tool{padding:6px 9px;background:#17242d;border:1px solid #344550;border-radius:5px;
+  color:#aebbc4;font-size:8px;cursor:pointer;}
+.tool.active{background:var(--accent);border-color:#15968e;color:#fff;}
+
+.viewer{min-height:460px;position:relative;display:flex;align-items:center;
+  justify-content:center;background:#010508;}
+#canvas{width:min(600px,90%);height:auto;max-height:460px;background:black;
+  border:1px solid #202d35;border-radius:3px;}
+.viewer-info{position:absolute;top:12px;left:13px;padding:6px 8px;
+  background:rgba(0,0,0,.65);border-radius:4px;color:#b8c6ce;font-size:8px;}
+.viewer-info-right{position:absolute;right:13px;bottom:12px;padding:6px 8px;
+  background:rgba(0,0,0,.70);border-radius:4px;color:var(--text);font-size:8px;}
+.viewer-legend{position:absolute;left:13px;bottom:12px;padding:6px 8px;
+  background:rgba(0,0,0,.65);border-radius:4px;color:#c7d3da;font-size:7px;
+  display:flex;gap:9px;}
+.legend-item{display:flex;align-items:center;gap:4px;}
+.legend-dot{width:7px;height:7px;border-radius:2px;display:inline-block;}
+
+.controls{padding:11px 14px;background:#101b24;border-top:1px solid var(--border);}
+.slice-row{display:flex;align-items:center;gap:8px;}
+.slice-row span{color:var(--muted);font-size:8px;}
+#sliceSlider{flex:1;accent-color:var(--accent-br);}
+.plane-row{display:flex;gap:5px;margin-top:8px;}
+.plane{padding:5px 8px;background:#17242d;border:1px solid #33434e;border-radius:4px;
+  color:#9eacb5;font-size:8px;cursor:pointer;}
+.plane.active{background:var(--accent);color:#fff;}
+
+.info-panel{margin-top:12px;padding:13px;border:1px solid #283842;background:var(--panel);
+  border-radius:7px;}
+.info-title{color:#fff;font-size:10px;font-weight:800;margin-bottom:8px;}
+.info-text{color:var(--muted2);font-size:9px;line-height:1.6;}
+.info-text strong{color:#c6d3da;}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;}
+.metric-card{padding:9px;border:1px solid var(--border2);background:var(--card2);border-radius:6px;}
+.metric-label{color:var(--muted);font-size:7px;text-transform:uppercase;letter-spacing:.7px;}
+.metric-number{color:#fff;font-size:14px;font-weight:800;margin-top:4px;}
+
+.right{background:var(--panel2);border-left:1px solid var(--border);padding:16px;overflow-y:auto;}
+.finding{padding:10px;background:#0d2422;border:1px solid #28514b;border-radius:6px;
+  color:var(--teal);font-size:9px;line-height:1.5;}
+.big-metric{padding:11px 0;border-bottom:1px solid #263640;}
+.big-label{color:var(--muted);font-size:7px;text-transform:uppercase;letter-spacing:.9px;}
+.big-number{color:#fff;font-size:19px;font-weight:800;margin-top:4px;}
+.unit{color:var(--muted);font-size:8px;}
+.small-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px;}
+.small-card{padding:8px;background:var(--card2);border:1px solid var(--border2);border-radius:6px;}
+.small-label{color:var(--muted);font-size:7px;}
+.small-value{color:#fff;font-size:13px;font-weight:800;margin-top:3px;}
+
+.workflow-item{display:flex;align-items:center;gap:8px;padding:6px 0;color:#9baab3;font-size:8px;}
+.workflow-dot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:#153b39;color:#6dded1;font-size:7px;font-weight:800;flex:none;}
+
+.warning{margin-top:10px;padding:8px;background:var(--warn-bg);border:1px solid var(--warn-bd);
+  border-radius:6px;color:var(--warn-tx);font-size:7px;line-height:1.5;}
+
+table.sizing{width:100%;border-collapse:collapse;margin-top:9px;font-size:9px;}
+table.sizing th{text-align:left;color:var(--muted);font-size:7px;text-transform:uppercase;
+  letter-spacing:.5px;padding:5px 6px;border-bottom:1px solid var(--border2);}
+table.sizing td{padding:6px 6px;border-bottom:1px solid #1c2831;color:#c6d3da;}
+table.sizing tr.best td{background:#0d2422;color:var(--teal);font-weight:700;}
+.badge{display:inline-block;padding:2px 6px;border-radius:10px;font-size:7px;font-weight:800;}
+.badge.rec{background:#103b39;color:#70e2d4;border:1px solid #1a625c;}
+
+.bar-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.bar-label{width:64px;font-size:8px;color:var(--muted2);flex:none;}
+.bar-track{flex:1;height:14px;background:#111e27;border:1px solid var(--border2);
+  border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;background:linear-gradient(90deg,#0f766e,#14b8a6);}
+.bar-fill.alt{background:linear-gradient(90deg,#7c4a1e,#f59e0b);}
+.bar-val{width:42px;text-align:right;font-size:8px;color:#c6d3da;flex:none;}
+
+.severity-badge{display:inline-block;padding:5px 10px;border-radius:6px;font-size:10px;
+  font-weight:800;color:#04150f;}
+
+#processingOverlay{display:none;position:fixed;inset:0;background:rgba(3,8,12,0.90);
+  z-index:999;align-items:center;justify-content:center;}
+.proc-box{width:340px;padding:22px;background:#0d1720;border:1px solid #273640;border-radius:10px;}
+.proc-title{color:#fff;font-size:12px;font-weight:800;margin-bottom:12px;}
+.proc-step{color:#9eb0bc;font-size:10px;margin-bottom:10px;min-height:14px;}
+
+@media print{
+  body *{ visibility:hidden; }
+  #printArea, #printArea *{ visibility:visible; }
+  #printArea{ position:absolute; left:0; top:0; width:100%; padding:30px; color:#111;
+    background:#fff; font-family:Arial,sans-serif; }
+  #printArea h2{ margin-bottom:2px; }
+  #printArea hr{ border:none; border-top:1px solid #ccc; margin:14px 0; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">M</div>
+    <div>
+      <div class="brand-title">MeniscusAI</div>
+      <div class="brand-sub">ORTHOPEDIC IMAGING, OA RESEARCH &amp; IMPLANT PLANNING WORKSTATION</div>
+    </div>
+  </div>
+  <div class="top-right">
+    <div class="chip">CASE <strong id="caseChip">SIM-0001_RIGHT</strong></div>
+    <div class="chip">RESEARCH PROTOTYPE</div>
+    <div class="chip ready">● SYSTEM READY</div>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="label">Current Study</div>
+    <div class="case-card">
+      <div class="case-id" id="caseIdLabel">SIM-0001</div>
+      <div class="case-sub" id="caseSubLabel">Right knee · Simulated research case</div>
+    </div>
+
+    <div class="label">Patient Parameters</div>
+    <div class="field">
+      <label>Age (years)</label>
+      <input id="pAge" type="number" min="18" max="95" value="58">
+    </div>
+    <div class="field">
+      <label>Biological Sex</label>
+      <select id="pSex">
+        <option value="female">Female</option>
+        <option value="male" selected>Male</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Knee OA Status</label>
+      <select id="pOA">
+        <option value="unknown">Unknown / Screening</option>
+        <option value="no">Non-OA (control)</option>
+        <option value="yes" selected>OA present</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Knee Side</label>
+      <select id="pSide">
+        <option value="RIGHT" selected>Right</option>
+        <option value="LEFT">Left</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Quick Demo Presets</label>
+      <div style="display:flex;gap:5px;">
+        <button class="tool" style="flex:1;font-size:7px;" onclick="loadPreset('healthy')">HEALTHY</button>
+        <button class="tool" style="flex:1;font-size:7px;" onclick="loadPreset('early')">EARLY OA</button>
+        <button class="tool" style="flex:1;font-size:7px;" onclick="loadPreset('severe')">SEVERE OA</button>
+      </div>
+    </div>
+
+    <button class="analyze" onclick="runAnalysis()">RUN AI ANALYSIS</button>
+    <button class="analyze" style="background:#17242d;border:1px solid #344550;margin-top:8px;"
+      onclick="exportReport()">⬇ &nbsp; EXPORT PATIENT REPORT</button>
+
+    <div class="divider"></div>
+    <div class="label">Clinical Workspaces</div>
+    <button id="nav-imaging" class="nav active" onclick="workspace('imaging')">▣ &nbsp; Clinical Imaging</button>
+    <button id="nav-segmentation" class="nav" onclick="workspace('segmentation')">◉ &nbsp; AI Segmentation</button>
+    <button id="nav-morphology" class="nav" onclick="workspace('morphology')">◇ &nbsp; Meniscus Morphology</button>
+    <button id="nav-thickness" class="nav" onclick="workspace('thickness')">▥ &nbsp; Thickness Analysis</button>
+    <button id="nav-geometry" class="nav" onclick="workspace('geometry')">◆ &nbsp; Femur / Tibia Geometry</button>
+    <button id="nav-implant" class="nav" onclick="workspace('implant')">⬒ &nbsp; Implant Sizing</button>
+    <button id="nav-planning" class="nav" onclick="workspace('planning')">◎ &nbsp; Patient Planning</button>
+    <button id="nav-research" class="nav" onclick="workspace('research')">▤ &nbsp; Research Analytics</button>
+    <button id="nav-progression" class="nav" onclick="workspace('progression')">▧ &nbsp; Progression Tracking</button>
+
+    <div class="divider"></div>
+    <div class="label">Image Plane</div>
+    <div class="plane-row">
+      <button id="plane-axial" class="plane active" onclick="setPlane('axial')">AXIAL</button>
+      <button id="plane-coronal" class="plane" onclick="setPlane('coronal')">CORONAL</button>
+      <button id="plane-sagittal" class="plane" onclick="setPlane('sagittal')">SAGITTAL</button>
+    </div>
+
+    <div class="divider"></div>
+    <div class="label">System Status</div>
+    <div class="notice">
+      Synthetic imaging engine loaded<br>
+      Segmentation model ready<br>
+      Morphology &amp; thickness engine ready<br>
+      Implant sizing database loaded (8 sizes)
+    </div>
+    <div class="notice">
+      RESEARCH / HACKATHON PROTOTYPE<br><br>
+      Imaging is procedurally generated for demonstration.
+      Not validated for diagnosis, treatment, or clinical
+      decision-making. Implant sizes reference a generic
+      demo database only.
+    </div>
+  </aside>
+
+  <!-- CENTER -->
+  <main class="center">
+    <div class="workspace">
+      <div class="workspace-header">
+        <div>
+          <div id="workspaceTitle" class="workspace-title">Clinical Imaging</div>
+          <div id="workspaceSubtitle" class="workspace-subtitle">Simulated 3D knee volume</div>
+        </div>
+        <div class="header-tools">
+          <button id="normalBtn" class="tool active" onclick="setWindow('normal')">NORMAL</button>
+          <button id="contrastBtn" class="tool" onclick="setWindow('high')">HIGH CONTRAST</button>
+          <button class="tool" onclick="resetViewer()">RESET</button>
+        </div>
+      </div>
+
+      <div class="viewer">
+        <div id="viewerInfo" class="viewer-info">AXIAL · SIMULATED MRI</div>
+        <canvas id="canvas" width="512" height="512"></canvas>
+        <div id="viewerLegend" class="viewer-legend" style="display:none;"></div>
+        <div class="viewer-info-right">
+          SLICE <span id="sliceNumber">32</span> / <span id="sliceTotal">63</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="slice-row">
+          <span>SLICE</span>
+          <input id="sliceSlider" type="range" min="0" max="63" value="32" oninput="render()">
+          <span id="sliceLabel">32</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="infoPanel" class="info-panel">
+      <div class="info-title">Clinical Imaging</div>
+      <div class="info-text">
+        Procedurally generated knee cross-sections standing in for a 3D-DESS style MRI volume.
+        <br><br>
+        Interactive axial, coronal and sagittal navigation is available. Use "RUN AI ANALYSIS" to
+        generate patient-specific segmentation, morphology, thickness and implant-sizing results.
+      </div>
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right">
+    <div class="label">AI Assessment</div>
+    <div class="finding" id="findingBox">
+      <strong>READY</strong><br><br>
+      Set patient parameters and run AI analysis to generate a patient-specific report.
+    </div>
+
+    <div class="divider"></div>
+    <div class="label">Quantitative Findings</div>
+
+    <div class="big-metric">
+      <div class="big-label">Estimated Meniscus Volume</div>
+      <div class="big-number"><span id="rVolume">—</span><span class="unit"> mm³</span></div>
+    </div>
+    <div class="big-metric">
+      <div class="big-label">Mean Thickness</div>
+      <div class="big-number"><span id="rMeanThick">—</span><span class="unit"> mm</span></div>
+    </div>
+    <div class="big-metric">
+      <div class="big-label">Thickness Range</div>
+      <div class="big-number"><span id="rThickRange">—</span><span class="unit"> mm</span></div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="label">Femur / Tibia Geometry</div>
+    <div class="small-grid">
+      <div class="small-card"><div class="small-label">FEMORAL ML WIDTH</div>
+        <div class="small-value"><span id="rFemML">—</span><span class="unit"> mm</span></div></div>
+      <div class="small-card"><div class="small-label">FEMORAL AP DEPTH</div>
+        <div class="small-value"><span id="rFemAP">—</span><span class="unit"> mm</span></div></div>
+      <div class="small-card"><div class="small-label">TIBIAL ML WIDTH</div>
+        <div class="small-value"><span id="rTibML">—</span><span class="unit"> mm</span></div></div>
+      <div class="small-card"><div class="small-label">TIBIAL AP DEPTH</div>
+        <div class="small-value"><span id="rTibAP">—</span><span class="unit"> mm</span></div></div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="label">Implant Size Recommendation</div>
+    <div class="finding" id="implantQuick" style="color:#e5c98a;background:#241f0d;border-color:#4a3f1a;">
+      Run analysis to generate implant sizing.
+    </div>
+
+    <div class="divider"></div>
+    <div class="label">Planning Workflow</div>
+    <div class="workflow-item"><div class="workflow-dot">01</div><span id="wf1">Segmentation pending</span></div>
+    <div class="workflow-item"><div class="workflow-dot">02</div><span id="wf2">Morphology pending</span></div>
+    <div class="workflow-item"><div class="workflow-dot">03</div><span id="wf3">Thickness pending</span></div>
+    <div class="workflow-item"><div class="workflow-dot">04</div><span id="wf4">Geometry pending</span></div>
+    <div class="workflow-item"><div class="workflow-dot">05</div><span id="wf5">Implant matching pending</span></div>
+
+    <div class="warning">
+      All imaging, segmentation, and measurements in this prototype are synthetically generated
+      from patient-entered parameters using deterministic demo formulas for hackathon
+      demonstration purposes. No real MRI data, real patient data, or a validated commercial
+      implant catalog is used. This tool must not be used for actual diagnosis, surgical planning,
+      or implant selection.
+    </div>
+  </aside>
+
+</div>
+
+<div id="processingOverlay">
+  <div class="proc-box">
+    <div class="proc-title">Running AI Pipeline…</div>
+    <div id="procStep" class="proc-step">Initializing…</div>
+    <div class="bar-track" style="height:8px;"><div id="procBar" class="bar-fill" style="width:0%;transition:width .3s;"></div></div>
+  </div>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+/* ==========================================================
+   DETERMINISTIC PRNG (seeded by patient parameters)
+   ========================================================== */
+function hashString(str){
+  let h = 2166136261;
+  for(let i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function mulberry32(seed){
+  let a = seed;
+  return function(){
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function round2(v){ return Math.round(v*100)/100; }
+
+/* ---- small chart helpers used to make each workspace visually distinct ---- */
+function barHTML(label, value, max, unit, alt){
+  const pct = clamp((value/max)*100, 3, 100);
+  return `<div class="bar-row">
+    <div class="bar-label">${label}</div>
+    <div class="bar-track"><div class="bar-fill${alt?" alt":""}" style="width:${pct}%"></div></div>
+    <div class="bar-val">${value}${unit||""}</div>
+  </div>`;
+}
+
+function geometrySVG(m){
+  const scale = 2.1;
+  const femW = m.femoral.ml*scale, femH = m.femoral.ap*scale*0.55;
+  const tibW = m.tibial.ml*scale, tibH = m.tibial.ap*scale*0.55;
+  const cx = 160;
+  return `<svg viewBox="0 0 320 210" width="100%" height="180" style="display:block;margin-top:6px;">
+    <text x="${cx}" y="14" fill="#9eb0bc" font-size="9" text-anchor="middle">FEMUR · ML ${m.femoral.ml} mm</text>
+    <rect x="${cx-femW/2}" y="20" width="${femW}" height="${femH}" rx="10"
+      fill="rgba(59,130,246,0.22)" stroke="#3b82f6" stroke-width="2"/>
+    <text x="${cx}" y="${20+femH/2+3}" fill="#cfe4f7" font-size="8" text-anchor="middle">AP ${m.femoral.ap} mm</text>
+
+    <text x="${cx}" y="${20+femH+22}" fill="#9eb0bc" font-size="9" text-anchor="middle">TIBIA · ML ${m.tibial.ml} mm</text>
+    <rect x="${cx-tibW/2}" y="${20+femH+28}" width="${tibW}" height="${tibH}" rx="10"
+      fill="rgba(245,158,11,0.20)" stroke="#f59e0b" stroke-width="2"/>
+    <text x="${cx}" y="${20+femH+28+tibH/2+3}" fill="#fbe3bd" font-size="8" text-anchor="middle">AP ${m.tibial.ap} mm</text>
+  </svg>`;
+}
+
+/* ==========================================================
+   IMPLANT SIZE DATABASE (generic demo reference, not a real
+   commercial catalog)
+   ========================================================== */
+const IMPLANT_DB = [
+  { size:"1", femMLmin:53, femMLmax:57, tibMLmin:54, tibMLmax:58 },
+  { size:"2", femMLmin:56, femMLmax:60, tibMLmin:57, tibMLmax:61 },
+  { size:"3", femMLmin:59, femMLmax:63, tibMLmin:60, tibMLmax:64 },
+  { size:"4", femMLmin:62, femMLmax:66, tibMLmin:63, tibMLmax:67 },
+  { size:"5", femMLmin:65, femMLmax:69, tibMLmin:66, tibMLmax:70 },
+  { size:"6", femMLmin:68, femMLmax:72, tibMLmin:69, tibMLmax:73 },
+  { size:"7", femMLmin:71, femMLmax:75, tibMLmin:72, tibMLmax:76 },
+  { size:"8", femMLmin:74, femMLmax:79, tibMLmin:75, tibMLmax:80 },
+];
+
+/* ==========================================================
+   PATIENT-SPECIFIC METRIC COMPUTATION (demo formulas)
+   ========================================================== */
+let currentMetrics = null;
+
+function computeMetrics(age, sex, oa, side){
+  const seed = hashString(`${age}|${sex}|${oa}|${side}`);
+  const rand = mulberry32(seed);
+
+  // --- Meniscus thickness ---
+  const baseMean = 1.95;
+  const oaAdj   = oa === "yes" ? -0.42 : (oa === "no" ? 0.05 : -0.15);
+  const ageAdj  = -(Math.max(0, age - 40)) * 0.0035;
+  const sexAdj  = sex === "male" ? 0.07 : -0.05;
+  const noise   = (rand() - 0.5) * 0.06;
+  const mean    = clamp(baseMean + oaAdj + ageAdj + sexAdj + noise, 0.85, 2.6);
+  const median  = clamp(mean - 0.15 - rand()*0.10, 0.6, mean);
+  const min     = clamp(mean - (0.9 + rand()*0.35) * (oa==="yes"?1.15:1), 0.35, mean*0.9);
+  const max     = mean + (1.25 + rand()*0.55) * (oa==="yes"?1.35:1);
+
+  const volume  = 4300 * (mean/1.95) * (0.92 + rand()*0.16);
+  const voxels  = Math.round(volume * 11.02);
+
+  // --- Femoral / tibial geometry ---
+  let femML = (sex==="male" ? 66 + rand()*6 : 58 + rand()*5);
+  let femAP = femML*0.62 + rand()*2;
+  let tibML = femML*0.97 + rand()*2;
+  let tibAP = femAP*0.90 + rand()*2;
+  let osteophyteNote = null;
+  if(oa === "yes"){
+    const bump = 1.4 + rand()*1.2;
+    femML += bump; tibML += bump*0.85;
+    osteophyteNote = "Marginal osteophyte formation increased apparent bony width by "
+      + round2(bump) + " mm (typical in OA-affected joints).";
+  }
+
+  // --- Implant matching ---
+  const ranked = IMPLANT_DB.map(row=>{
+    const femMid = (row.femMLmin+row.femMLmax)/2;
+    const tibMid = (row.tibMLmin+row.tibMLmax)/2;
+    const dist = Math.abs(femML - femMid) + Math.abs(tibML - tibMid);
+    const femFit = femML >= row.femMLmin && femML <= row.femMLmax;
+    const tibFit = tibML >= row.tibMLmin && tibML <= row.tibMLmax;
+    return {...row, dist, femFit, tibFit};
+  }).sort((a,b)=>a.dist-b.dist);
+
+  // --- Research cohort (demo, tied loosely to selected OA status) ---
+  const normalN = 1600 + Math.round(rand()*120);
+  const abnormalN = 1250 + Math.round(rand()*150);
+  const pooledSD = 0.55 + rand()*0.1;
+  const nonOAmean = 1.95 + ageAdj + sexAdj;
+  const oaMean = nonOAmean - 0.40 - rand()*0.08;
+  const cohensD = (nonOAmean - oaMean) / pooledSD;
+  const pValue = clamp(0.06 - cohensD*0.05 + rand()*0.01, 0.0008, 0.09);
+
+  // --- AI severity classification (explainable, KL-inspired 0-4 grade) ---
+  const deficit = round2(baseMean - mean); // positive = thinner than healthy baseline
+  const gradeLabels = [
+    "Grade 0 · No OA signs detected",
+    "Grade 1 · Minimal changes",
+    "Grade 2 · Mild OA pattern",
+    "Grade 3 · Moderate OA pattern",
+    "Grade 4 · Severe OA pattern"
+  ];
+  const gradeColors = ["#6ee7b7","#a3e635","#facc15","#f59e0b","#ef4444"];
+  let grade = 0;
+  if(oa === "yes"){
+    grade = deficit > 0.60 ? 4 : deficit > 0.45 ? 3 : deficit > 0.25 ? 2 : 1;
+  } else if(oa === "unknown"){
+    grade = deficit > 0.35 ? 2 : deficit > 0.15 ? 1 : 0;
+  } else {
+    grade = deficit > 0.30 ? 1 : 0;
+  }
+  const severity = { grade, label: gradeLabels[grade], color: gradeColors[grade], deficit };
+
+  // --- Synthetic segmentation confidence score ---
+  const confidence = round2(clamp(93.5 - deficit*4 + (rand()-0.5)*4, 78, 99));
+
+  return {
+    age, sex, oa, side, seed,
+    thickness: { mean: round2(mean), median: round2(median), min: round2(min), max: round2(max) },
+    factors: { baseMean, ageAdj: round2(ageAdj), sexAdj: round2(sexAdj), oaAdj: round2(oaAdj), noise: round2(noise) },
+    volume: round2(volume), voxels,
+    femoral: { ml: round2(femML), ap: round2(femAP) },
+    tibial:  { ml: round2(tibML), ap: round2(tibAP) },
+    osteophyteNote,
+    implants: ranked,
+    severity, confidence,
+    cohort: { normalN, abnormalN, cohensD: round2(cohensD), pValue: pValue.toFixed(4), nonOAmean: round2(nonOAmean), oaMean: round2(oaMean) }
+  };
+}
+
+/* ==========================================================
+   NOISE TEXTURE (precomputed once, tiled for MRI grain)
+   ========================================================== */
+const noiseCanvas = document.createElement("canvas");
+noiseCanvas.width = 128; noiseCanvas.height = 128;
+(function buildNoise(){
+  const nctx = noiseCanvas.getContext("2d");
+  const img = nctx.createImageData(128,128);
+  for(let i=0;i<img.data.length;i+=4){
+    const v = 128 + (Math.random()-0.5)*90;
+    img.data[i] = v; img.data[i+1] = v; img.data[i+2] = v; img.data[i+3] = 255;
+  }
+  nctx.putImageData(img,0,0);
+})();
+
+/* ==========================================================
+   STATE
+   ========================================================== */
+let currentPlane = "axial";
+let currentMode  = "mri";      // mri | seg | morph
+let windowMode   = "normal";
+const MRI_Z = 64;
+
+/* ==========================================================
+   SYNTHETIC SLICE GEOMETRY
+   Returns normalized (0..1) shape parameters for a given
+   plane + slice, used to draw femur / tibia / meniscus.
+   ========================================================== */
+function sliceGeometry(plane, slice){
+  const t = slice / (MRI_Z - 1); // 0..1
+  const jointT = 1 - Math.abs(t - 0.5) * 2; // peaks at mid-slice (joint line)
+  return { t, jointT };
+}
+
+function drawKnee(ctx, plane, slice, mode, windowMode, metrics){
+  const W = 512, H = 512;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0,0,W,H);
+
+  const { t, jointT } = sliceGeometry(plane, slice);
+  const contrastBoost = windowMode === "high" ? 1.35 : 1.0;
+  const brightness = windowMode === "high" ? 25 : 0;
+
+  function grey(v){
+    v = clamp(v*contrastBoost + brightness, 0, 255);
+    return `rgb(${v|0},${v|0},${v|0})`;
+  }
+
+  ctx.save();
+
+  if(plane === "axial"){
+    // upper slices = femoral condyles, lower slices = tibial plateau
+    const isFemur = t < 0.5;
+    const cx = W/2, cy = H/2;
+    const rx = 150 + Math.sin(t*Math.PI)*30;
+    const ry = 120 + Math.sin(t*Math.PI)*25;
+
+    // bone body
+    ctx.fillStyle = grey(isFemur ? 205 : 195);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // medullary / cancellous shading
+    ctx.fillStyle = grey(120);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx*0.72, ry*0.72, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // meniscus crescents visible near mid-joint slices
+    if(jointT > 0.35){
+      const a = jointT;
+      ctx.fillStyle = mode==="seg" ? "rgba(20,184,166,0.55)" : grey(150);
+      ctx.beginPath();
+      ctx.ellipse(cx - rx*0.62, cy, 34*a, 78*a, 0.25, 0, Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx + rx*0.62, cy, 30*a, 74*a, -0.25, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    if(mode === "seg"){
+      ctx.strokeStyle = "rgba(59,130,246,0.9)";
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2); ctx.stroke();
+    }
+  }
+
+  if(plane === "coronal"){
+    const cx = W/2;
+    const femurCY = 150 + Math.sin(t*Math.PI)*8;
+    const tibiaCY = 340 - Math.sin(t*Math.PI)*8;
+    const gap = 46 - jointT*14;
+
+    // femur
+    ctx.fillStyle = grey(205);
+    ctx.beginPath();
+    ctx.ellipse(cx, femurCY, 190, 110, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = grey(115);
+    ctx.beginPath();
+    ctx.ellipse(cx, femurCY, 150, 78, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // tibia
+    ctx.fillStyle = grey(198);
+    ctx.beginPath();
+    ctx.ellipse(cx, tibiaCY, 170, 100, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = grey(112);
+    ctx.beginPath();
+    ctx.ellipse(cx, tibiaCY, 132, 68, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // meniscus wedge in joint space
+    const jy = (femurCY + tibiaCY)/2 + gap*0.05;
+    const menThick = 10 + jointT*22;
+    ctx.fillStyle = mode==="seg" ? "rgba(20,184,166,0.6)" : grey(165);
+    ctx.beginPath();
+    ctx.moveTo(cx-190, jy-6);
+    ctx.quadraticCurveTo(cx-150, jy-menThick, cx-60, jy-4);
+    ctx.lineTo(cx-60, jy+menThick*0.5);
+    ctx.quadraticCurveTo(cx-150, jy+menThick, cx-190, jy+6);
+    ctx.closePath(); ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(cx+190, jy-6);
+    ctx.quadraticCurveTo(cx+150, jy-menThick, cx+60, jy-4);
+    ctx.lineTo(cx+60, jy+menThick*0.5);
+    ctx.quadraticCurveTo(cx+150, jy+menThick, cx+190, jy+6);
+    ctx.closePath(); ctx.fill();
+
+    if(mode === "seg"){
+      ctx.strokeStyle = "rgba(59,130,246,0.9)"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.ellipse(cx, femurCY, 190, 110, 0, 0, Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = "rgba(245,158,11,0.9)";
+      ctx.beginPath(); ctx.ellipse(cx, tibiaCY, 170, 100, 0, 0, Math.PI*2); ctx.stroke();
+    }
+  }
+
+  if(plane === "sagittal"){
+    const cx = 256, cy = 256;
+    // femur curved profile
+    ctx.fillStyle = grey(205);
+    ctx.beginPath();
+    ctx.moveTo(cx-140, cy-160);
+    ctx.quadraticCurveTo(cx+120, cy-190, cx+150, cy-40 - t*30);
+    ctx.quadraticCurveTo(cx+90, cy+10 - t*20, cx-20, cy+10);
+    ctx.quadraticCurveTo(cx-120, cy+10, cx-140, cy-100);
+    ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = grey(115);
+    ctx.beginPath();
+    ctx.ellipse(cx-10, cy-90, 100, 70, 0.15, 0, Math.PI*2);
+    ctx.fill();
+
+    // tibia
+    ctx.fillStyle = grey(198);
+    ctx.beginPath();
+    ctx.moveTo(cx-150, cy+40);
+    ctx.quadraticCurveTo(cx+60, cy+20 + t*10, cx+160, cy+60);
+    ctx.lineTo(cx+150, cy+190);
+    ctx.lineTo(cx-140, cy+190);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = grey(112);
+    ctx.beginPath();
+    ctx.ellipse(cx, cy+110, 110, 60, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // meniscus wedge (medial or lateral depending on slice half)
+    const menA = jointT;
+    ctx.fillStyle = mode==="seg" ? "rgba(20,184,166,0.6)" : grey(160);
+    ctx.beginPath();
+    ctx.moveTo(cx-100, cy+18);
+    ctx.quadraticCurveTo(cx-20, cy+2 - menA*14, cx+60, cy+22);
+    ctx.quadraticCurveTo(cx-10, cy+40 + menA*10, cx-100, cy+40);
+    ctx.closePath(); ctx.fill();
+
+    if(mode === "seg"){
+      ctx.strokeStyle = "rgba(59,130,246,0.9)"; ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+  }
+
+  ctx.restore();
+
+  // grain overlay for MRI-like texture
+  const pattern = ctx.createPattern(noiseCanvas, "repeat");
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  ctx.globalCompositeOperation = "overlay";
+  ctx.fillStyle = pattern;
+  ctx.fillRect(0,0,W,H);
+  ctx.restore();
+
+  // vignette
+  const grad = ctx.createRadialGradient(W/2,H/2,120,W/2,H/2,340);
+  grad.addColorStop(0,"rgba(0,0,0,0)");
+  grad.addColorStop(1,"rgba(0,0,0,0.55)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+}
+
+/* ==========================================================
+   PLANE / WINDOW / RENDER
+   ========================================================== */
+function setPlane(plane){
+  currentPlane = plane;
+  ["axial","coronal","sagittal"].forEach(p=>{
+    document.getElementById("plane-"+p).classList.toggle("active", p===plane);
+  });
+  document.getElementById("viewerInfo").innerText =
+    plane.toUpperCase() + " · " + (currentMode==="seg" ? "AI SEGMENTATION" : "SIMULATED MRI");
+  render();
+}
+
+function setWindow(mode){
+  windowMode = mode;
+  document.getElementById("normalBtn").classList.toggle("active", mode==="normal");
+  document.getElementById("contrastBtn").classList.toggle("active", mode==="high");
+  render();
+}
+
+function resetViewer(){
+  currentPlane = "axial";
+  currentMode = "mri";
+  windowMode = "normal";
+  const slider = document.getElementById("sliceSlider");
+  slider.max = MRI_Z - 1;
+  slider.value = Math.floor(MRI_Z/2);
+  setPlane("axial");
+  workspace("imaging");
+}
+
+function render(){
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const slice = parseInt(document.getElementById("sliceSlider").value);
+  document.getElementById("sliceLabel").innerText = slice;
+  document.getElementById("sliceNumber").innerText = slice;
+  document.getElementById("sliceTotal").innerText = MRI_Z - 1;
+
+  const drawMode = (currentMode === "seg") ? "seg" : "mri";
+  drawKnee(ctx, currentPlane, slice, drawMode, windowMode, currentMetrics);
+
+  const legend = document.getElementById("viewerLegend");
+  if(drawMode === "seg"){
+    legend.style.display = "flex";
+    legend.innerHTML = `
+      <div class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>Femur</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>Tibia</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#14b8a6"></span>Meniscus</div>
+    `;
+  } else {
+    legend.style.display = "none";
+  }
+}
+
+/* ==========================================================
+   WORKSPACE SWITCHING
+   ========================================================== */
+function workspace(name){
+  ["imaging","segmentation","morphology","thickness","geometry","implant","planning","research","progression"]
+    .forEach(n=>document.getElementById("nav-"+n).classList.toggle("active", n===name));
+
+  const title = document.getElementById("workspaceTitle");
+  const subtitle = document.getElementById("workspaceSubtitle");
+  const panel = document.getElementById("infoPanel");
+  const m = currentMetrics;
+
+  if(name === "imaging"){
+    currentMode = "mri";
+    title.innerText = "Clinical Imaging";
+    subtitle.innerText = "Simulated 3D knee volume";
+    panel.innerHTML = `<div class="info-title">Clinical Imaging</div>
+      <div class="info-text">Procedurally generated knee cross-sections used as a stand-in for a
+      3D-DESS style MRI volume. Interactive axial, coronal and sagittal navigation is available.</div>`;
+  }
+
+  if(name === "segmentation"){
+    currentMode = "seg";
+    title.innerText = "AI Segmentation";
+    subtitle.innerText = "Femur · tibia · medial meniscus masks";
+    panel.innerHTML = `<div class="info-title">Segmentation Overlay</div>
+      ${m ? barHTML("Confidence", m.confidence, 100, "%", true) : ""}
+      <div class="info-text">Simulated pixel-wise segmentation of the femur, tibia and medial
+      meniscus, color-coded per the legend on the viewer. In a production system this stage would
+      be a trained 3D U-Net / nnU-Net style segmentation model applied to real MRI volumes.
+      ${m ? "<br><br><strong>Status:</strong> Segmentation generated for current patient parameters." :
+             "<br><br>Run AI analysis to generate a patient-specific segmentation."}</div>`;
+  }
+
+  if(name === "morphology"){
+    currentMode = "morph";
+    title.innerText = "Meniscus Morphology";
+    subtitle.innerText = "Volume vs. reference population";
+    const refVol = 4300;
+    panel.innerHTML = m ? `
+      <div class="info-title">Volume Comparison</div>
+      ${barHTML("This case", m.volume, 6500, " mm³")}
+      ${barHTML("Reference", refVol, 6500, " mm³", true)}
+      <div class="metric-grid" style="margin-top:10px">
+        <div class="metric-card"><div class="metric-label">VOXEL COUNT</div>
+          <div class="metric-number">${m.voxels.toLocaleString()}</div></div>
+        <div class="metric-card"><div class="metric-label">Δ VS REFERENCE</div>
+          <div class="metric-number">${m.volume>=refVol?"+":""}${round2(m.volume-refVol)}<span class="unit"> mm³</span></div></div>
+      </div>
+      <div class="info-text" style="margin-top:10px">
+        Volume is derived from the segmented meniscus mask voxel count using the simulated
+        voxel-to-mm³ scaling factor for this study.
+      </div>` :
+      `<div class="info-title">Volume Comparison</div>
+       <div class="info-text">Run AI analysis to generate morphology metrics.</div>`;
+  }
+
+  if(name === "thickness"){
+    currentMode = "morph";
+    title.innerText = "Thickness Analysis";
+    subtitle.innerText = "Patient-specific thickness distribution";
+    const scaleMax = m ? Math.max(3, m.thickness.max*1.15) : 3;
+    panel.innerHTML = m ? `
+      <div class="info-title">Thickness Distribution</div>
+      ${barHTML("Minimum", m.thickness.min, scaleMax, " mm")}
+      ${barHTML("Median", m.thickness.median, scaleMax, " mm")}
+      ${barHTML("Mean", m.thickness.mean, scaleMax, " mm", true)}
+      ${barHTML("Maximum", m.thickness.max, scaleMax, " mm")}
+      <div class="info-title" style="margin-top:14px">AI Explainability — Why This Result?</div>
+      <div class="info-text">
+        Baseline reference thickness: <strong>${m.factors.baseMean} mm</strong><br>
+        Age adjustment: <strong>${m.factors.ageAdj>=0?"+":""}${m.factors.ageAdj} mm</strong><br>
+        Sex adjustment: <strong>${m.factors.sexAdj>=0?"+":""}${m.factors.sexAdj} mm</strong><br>
+        OA-status adjustment: <strong>${m.factors.oaAdj>=0?"+":""}${m.factors.oaAdj} mm</strong><br>
+        Model residual: <strong>${m.factors.noise>=0?"+":""}${m.factors.noise} mm</strong><br>
+        → <strong>Predicted mean thickness: ${m.thickness.mean} mm</strong>
+      </div>
+      <div class="info-text" style="margin-top:10px">
+        ${m.oa === "yes" ? "Thinning and increased variability are consistent with OA-associated meniscal degeneration in this simulated case." :
+          m.oa === "no" ? "Thickness profile falls within the simulated non-OA reference range." :
+          "OA status unspecified — thickness shown reflects age and sex adjustment only."}
+      </div>` :
+      `<div class="info-title">Thickness Distribution</div>
+       <div class="info-text">Run AI analysis to generate thickness statistics.</div>`;
+  }
+
+  if(name === "geometry"){
+    currentMode = "morph";
+    title.innerText = "Femur / Tibia Geometry";
+    subtitle.innerText = "Patient-specific bone dimensions for implant planning";
+    panel.innerHTML = m ? `
+      <div class="info-title">Anatomical Schematic (to scale)</div>
+      ${geometrySVG(m)}
+      <div class="info-text" style="margin-top:6px">
+        ML = mediolateral width, AP = anteroposterior depth.
+        ${m.osteophyteNote ? "<br><br>" + m.osteophyteNote : ""}
+      </div>` :
+      `<div class="info-title">Anatomical Schematic (to scale)</div>
+       <div class="info-text">Run AI analysis to generate femoral and tibial measurements.</div>`;
+  }
+
+  if(name === "implant"){
+    currentMode = "morph";
+    title.innerText = "Implant Sizing";
+    subtitle.innerText = "Patient-specific TKA size matching (demo database)";
+    if(m){
+      const rows = m.implants.slice(0,5).map((r,i)=>`
+        <tr class="${i===0 ? "best":""}">
+          <td>${r.size}${i===0 ? ' <span class="badge rec">BEST FIT</span>' : ""}</td>
+          <td>${r.femMLmin}–${r.femMLmax} mm ${r.femFit ? "✓" : ""}</td>
+          <td>${r.tibMLmin}–${r.tibMLmax} mm ${r.tibFit ? "✓" : ""}</td>
+          <td>${round2(r.dist)} mm</td>
+        </tr>`).join("");
+      panel.innerHTML = `
+        <div class="info-title">Ranked Implant Size Candidates</div>
+        <table class="sizing">
+          <tr><th>Size</th><th>Femoral ML range</th><th>Tibial ML range</th><th>Fit score (lower=better)</th></tr>
+          ${rows}
+        </table>
+        <div class="info-text" style="margin-top:10px">
+          Measured femoral ML ${m.femoral.ml} mm and tibial ML ${m.tibial.ml} mm were compared
+          against a generic demo implant sizing table (not a validated commercial catalog) to
+          identify the closest matching component size. Final implant selection must be confirmed
+          intraoperatively by the surgeon using trial components.
+        </div>`;
+    } else {
+      panel.innerHTML = `<div class="info-title">Ranked Implant Size Candidates</div>
+       <div class="info-text">Run AI analysis to generate femoral/tibial dimensions and implant matches.</div>`;
+    }
+  }
+
+  if(name === "planning"){
+    currentMode = "morph";
+    title.innerText = "Patient-Specific Planning";
+    subtitle.innerText = "Research-oriented planning checklist";
+    const steps = [
+      ["Segmentation", true],
+      ["Morphology", !!m],
+      ["Thickness quantified", !!m],
+      ["Femur/Tibia geometry", !!m],
+      ["Implant matching", !!m],
+    ];
+    const doneCount = steps.filter(s=>s[1]).length;
+    const pct = Math.round((doneCount/steps.length)*100);
+    const checklist = steps.map(([label,done])=>`
+      <div class="workflow-item" style="border-bottom:1px solid #1c2831;padding:7px 0;">
+        <div class="workflow-dot" style="background:${done?"#153b39":"#241d1d"};color:${done?"#6dded1":"#a06060"};">
+          ${done?"✓":"…"}
+        </div>
+        <span>${label} — ${done?"complete":"pending"}</span>
+      </div>`).join("");
+    panel.innerHTML = `
+      <div class="info-title">Planning Checklist</div>
+      ${checklist}
+      <div class="bar-row" style="margin-top:10px;">
+        <div class="bar-label">Overall</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+        <div class="bar-val">${pct}%</div>
+      </div>
+      <div class="info-text" style="margin-top:10px">
+        This workspace consolidates the outputs of the meniscus/OA module and the implant sizing
+        module into a single research-oriented planning summary for clinician review.
+        ${m ? `<br><br>Recommended implant size for this case: <strong>${m.implants[0].size}</strong> (see Implant Sizing).` : ""}
+      </div>`;
+  }
+
+  if(name === "research"){
+    currentMode = "mri";
+    title.innerText = "Research Analytics";
+    subtitle.innerText = "Simulated OA vs non-OA cohort analysis";
+    if(m){
+      const c = m.cohort;
+      const nMax = Math.max(c.normalN, c.abnormalN) * 1.15;
+      panel.innerHTML = `
+        <div class="info-title">Cohort Size (simulated)</div>
+        ${barHTML("Normal", c.normalN, nMax, "", true)}
+        ${barHTML("Abnormal", c.abnormalN, nMax, "")}
+        <div class="info-title" style="margin-top:12px">Mean Thickness by Group</div>
+        ${barHTML("Non-OA", c.nonOAmean, 3, " mm", true)}
+        ${barHTML("OA", c.oaMean, 3, " mm")}
+        <div class="info-title" style="margin-top:12px">Effect Size</div>
+        ${barHTML("Cohen's d", c.cohensD, 1.5, "")}
+        <div class="info-text" style="margin-top:10px">
+          Welch p-value: <strong>${c.pValue}</strong><br><br>
+          This is an exploratory, simulated statistic for demonstration and is not a clinical
+          diagnostic threshold.
+        </div>`;
+    } else {
+      panel.innerHTML = `<div class="info-title">Normal vs Abnormal Cohort (simulated)</div>
+        <div class="info-text">Run AI analysis to generate cohort comparison statistics.</div>`;
+    }
+  }
+
+  if(name === "progression"){
+    currentMode = "mri";
+    title.innerText = "Progression Tracking";
+    subtitle.innerText = "Longitudinal thickness across analysis runs (this session)";
+    if(history.length === 0){
+      panel.innerHTML = `<div class="info-title">Progression Tracking</div>
+        <div class="info-text">Run AI analysis to start tracking. Each run in this session is
+        logged as a simulated follow-up visit so you can demonstrate longitudinal monitoring of
+        meniscus changes over time.</div>`;
+    } else {
+      const maxT = Math.max(3, ...history.map(h=>h.thickness));
+      const bars = history.map((h,idx)=>
+        barHTML(`Visit ${idx+1}`, h.thickness, maxT, " mm", idx===history.length-1)).join("");
+      const rows = history.map((h,idx)=>
+        `<tr><td>${idx+1}</td><td>${h.time}</td><td>${h.age}</td><td>${h.sexLabel}</td>
+          <td>${h.oaLabel}</td><td>${h.thickness} mm</td><td>${h.gradeLabel}</td></tr>`).join("");
+      panel.innerHTML = `
+        <div class="info-title">Mean Thickness Across Visits</div>
+        ${bars}
+        <div class="info-title" style="margin-top:14px">Visit Log</div>
+        <table class="sizing">
+          <tr><th>#</th><th>Time</th><th>Age</th><th>Sex</th><th>OA</th><th>Mean thickness</th><th>AI Grade</th></tr>
+          ${rows}
+        </table>
+        <div class="info-text" style="margin-top:10px">
+          History is stored in-memory for this browser session only (nothing is written to disk).
+          This is a demo of how repeated scans could be used to monitor meniscus and OA
+          progression over time in a real deployment.
+        </div>`;
+    }
+  }
+
+  document.getElementById("viewerInfo").innerText =
+    currentPlane.toUpperCase() + " · " + (currentMode==="seg" ? "AI SEGMENTATION" : "SIMULATED MRI");
+  render();
+}
+
+/* ==========================================================
+   RUN ANALYSIS
+   ========================================================== */
+function populateResults(m){
+  document.getElementById("caseChip").innerText = `SIM-${m.seed % 9000 + 1000}_${m.side}`;
+  document.getElementById("caseIdLabel").innerText = `SIM-${m.seed % 9000 + 1000}`;
+  document.getElementById("caseSubLabel").innerText =
+    `${m.side === "RIGHT" ? "Right" : "Left"} knee · Age ${m.age} · ${m.sex === "male" ? "Male" : "Female"} · ` +
+    (m.oa === "yes" ? "OA present" : m.oa === "no" ? "Non-OA" : "OA status unknown");
+
+  document.getElementById("findingBox").innerHTML =
+    `<strong>MENISCUS DETECTED</strong> &nbsp;
+     <span class="severity-badge" style="background:${m.severity.color};">${m.severity.label}</span>
+     <br><br>
+     Segmentation confidence: <strong>${m.confidence}%</strong><br>
+     Patient-specific segmentation and quantitative analysis generated for the current parameters.`;
+
+  document.getElementById("rVolume").innerText = m.volume;
+  document.getElementById("rMeanThick").innerText = m.thickness.mean;
+  document.getElementById("rThickRange").innerText = `${m.thickness.min} – ${m.thickness.max}`;
+  document.getElementById("rFemML").innerText = m.femoral.ml;
+  document.getElementById("rFemAP").innerText = m.femoral.ap;
+  document.getElementById("rTibML").innerText = m.tibial.ml;
+  document.getElementById("rTibAP").innerText = m.tibial.ap;
+
+  const best = m.implants[0];
+  document.getElementById("implantQuick").innerHTML =
+    `<strong>RECOMMENDED SIZE ${best.size}</strong><br><br>
+     Femoral ML ${m.femoral.ml} mm / Tibial ML ${m.tibial.ml} mm best matched demo size
+     ${best.size} (fit score ${round2(best.dist)} mm). See Implant Sizing workspace for full ranking.`;
+
+  document.getElementById("wf1").innerText = "Segmentation generated";
+  document.getElementById("wf2").innerText = "Morphology extracted";
+  document.getElementById("wf3").innerText = "Thickness quantified";
+  document.getElementById("wf4").innerText = "Geometry profile generated";
+  document.getElementById("wf5").innerText = "Implant size matched (size " + best.size + ")";
+}
+
+/* ==========================================================
+   ANIMATED AI PIPELINE + RUN ANALYSIS
+   ========================================================== */
+let history = [];
+
+function runAnalysis(){
+  const overlay = document.getElementById("processingOverlay");
+  const stepEl = document.getElementById("procStep");
+  const barEl = document.getElementById("procBar");
+  const steps = [
+    "Loading simulated imaging volume…",
+    "Segmenting femur, tibia & medial meniscus…",
+    "Computing morphology & thickness statistics…",
+    "Matching patient anatomy to implant database…",
+    "Compiling patient-specific report…"
+  ];
+  overlay.style.display = "flex";
+  barEl.style.width = "0%";
+  let i = 0;
+  (function next(){
+    if(i < steps.length){
+      stepEl.innerText = steps[i];
+      barEl.style.width = Math.round(((i+1)/steps.length)*100) + "%";
+      i++;
+      setTimeout(next, 360);
+    } else {
+      setTimeout(()=>{
+        overlay.style.display = "none";
+        finalizeAnalysis();
+      }, 200);
+    }
+  })();
+}
+
+function finalizeAnalysis(){
+  const age  = clamp(parseInt(document.getElementById("pAge").value) || 58, 18, 95);
+  const sex  = document.getElementById("pSex").value;
+  const oa   = document.getElementById("pOA").value;
+  const side = document.getElementById("pSide").value;
+
+  currentMetrics = computeMetrics(age, sex, oa, side);
+  populateResults(currentMetrics);
+
+  history.push({
+    time: new Date().toLocaleTimeString(),
+    age: currentMetrics.age,
+    sexLabel: currentMetrics.sex === "male" ? "M" : "F",
+    oaLabel: currentMetrics.oa === "yes" ? "OA" : currentMetrics.oa === "no" ? "Non-OA" : "Unk",
+    thickness: currentMetrics.thickness.mean,
+    gradeLabel: currentMetrics.severity.label
+  });
+  if(history.length > 12) history.shift();
+
+  workspace("segmentation");
+}
+
+function loadPreset(name){
+  const presets = {
+    healthy: { age: 34, sex: "female", oa: "no" },
+    early:   { age: 52, sex: "male",   oa: "yes" },
+    severe:  { age: 71, sex: "male",   oa: "yes" }
+  };
+  const p = presets[name];
+  document.getElementById("pAge").value = p.age;
+  document.getElementById("pSex").value = p.sex;
+  document.getElementById("pOA").value = p.oa;
+  runAnalysis();
+}
+
+/* ==========================================================
+   EXPORT PATIENT REPORT (browser print → save as PDF)
+   ========================================================== */
+function exportReport(){
+  if(!currentMetrics){
+    alert("Run AI analysis first to generate a report.");
+    return;
+  }
+  const m = currentMetrics;
+  const best = m.implants[0];
+  document.getElementById("printArea").innerHTML = `
+    <h2>MeniscusAI — Patient Research Report</h2>
+    <p>Generated: ${new Date().toLocaleString()}</p>
+    <p>Case: SIM-${m.seed % 9000 + 1000}_${m.side} &nbsp;|&nbsp; Age ${m.age} &nbsp;|&nbsp;
+       ${m.sex === "male" ? "Male" : "Female"} &nbsp;|&nbsp;
+       OA status: ${m.oa === "yes" ? "OA present" : m.oa === "no" ? "Non-OA" : "Unknown"}</p>
+    <hr>
+    <h3>AI Assessment</h3>
+    <p>Severity classification: <strong>${m.severity.label}</strong></p>
+    <p>Segmentation confidence: <strong>${m.confidence}%</strong></p>
+    <h3>Meniscus Thickness</h3>
+    <p>Mean: ${m.thickness.mean} mm &nbsp; Median: ${m.thickness.median} mm &nbsp;
+       Range: ${m.thickness.min} – ${m.thickness.max} mm</p>
+    <p>Estimated volume: ${m.volume} mm³ (${m.voxels.toLocaleString()} voxels)</p>
+    <h3>Femur / Tibia Geometry</h3>
+    <p>Femoral ML ${m.femoral.ml} mm &nbsp; Femoral AP ${m.femoral.ap} mm</p>
+    <p>Tibial ML ${m.tibial.ml} mm &nbsp; Tibial AP ${m.tibial.ap} mm</p>
+    <h3>Implant Size Recommendation</h3>
+    <p>Best-fit demo size: <strong>${best.size}</strong> (fit score ${round2(best.dist)} mm)</p>
+    <h3>Research Cohort Comparison (simulated)</h3>
+    <p>Non-OA reference mean: ${m.cohort.nonOAmean} mm &nbsp; OA reference mean: ${m.cohort.oaMean} mm</p>
+    <p>Welch p-value: ${m.cohort.pValue} &nbsp; Cohen's d: ${m.cohort.cohensD}</p>
+    <hr>
+    <p style="font-size:11px;color:#555;">
+      This report was generated by a hackathon research prototype using synthetic/simulated
+      imaging and a generic demo implant sizing table. It is not derived from real patient
+      imaging, is not a validated diagnostic or planning tool, and must not be used for actual
+      clinical diagnosis, treatment, or implant selection.
+    </p>`;
+  window.print();
+}
+
+/* ==========================================================
+   INIT — populate the right panel immediately using the
+   default patient parameters already shown in the sidebar,
+   so Quantitative Findings is never blank on load.
+   ========================================================== */
+currentMetrics = computeMetrics(58, "male", "yes", "RIGHT");
+populateResults(currentMetrics);
+history.push({
+  time: new Date().toLocaleTimeString(), age: 58, sexLabel: "M", oaLabel: "OA",
+  thickness: currentMetrics.thickness.mean, gradeLabel: currentMetrics.severity.label
+});
+setPlane("axial");
+workspace("imaging");
+</script>
+</body>
+</html>
